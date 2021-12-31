@@ -24,22 +24,29 @@ Random_Number_Generator::Random_Number_Generator(long int seed){
   state_ = (RNG_State*) malloc(sizeof(RNG_State));
   state_->initialSeed = seed;
   state_->idum = seed;
-    long int* idum=&(state_->idum);
-  state_->idum2=123456789;
-    state_->iy=0;
-    if ( *idum == 0)
-    *idum=1; /* Be sure to prevent idum = 0 */
-    else if(*idum < 0) 
+
+  long int* idum = &(state_->idum);
+
+  state_->idum2 = 123456789;
+  state_->iy = 0;
+
+  if ( *idum == 0)
+    *idum = 1; /* Be sure to prevent idum = 0 */
+  else if(*idum < 0) 
     *idum = -(*idum);
-    state_->idum2=(*idum);
-    for (int j=RNG_NTAB+7;j>=0;j--) { /* Load the shuffle table (after 8 warm-ups) */
-      long int k=(*idum)/IQ1;
-      *idum=IA1*(*idum-k*IQ1)-k*IR1;
-      if (*idum < 0) *idum += IM1;
-      if (j < RNG_NTAB) state_->iv[j] = *idum;
-    }
-    state_->iy=state_->iv[0];
-  state_->generate=true;
+
+  state_->idum2 = (*idum);
+
+  for (int j = RNG_NTAB + 7; j >= 0; j--) { /* Load the shuffle table (after 8 warm-ups) */
+    long int k = (*idum) / IQ1;
+    *idum = IA1 * (*idum - k * IQ1) - k * IR1;
+    if (*idum < 0) 
+      *idum += IM1;
+    if (j < RNG_NTAB) 
+      state_->iv[j] = *idum;
+  }
+  state_->iy = state_->iv[0];
+  state_->generate = true;
 
   userCDF_ = NULL;
   userPDF_ = NULL;
@@ -71,20 +78,31 @@ double Random_Number_Generator::getUniform(){
   long int* idum;
   double temp;
   
-  idum=&(state_->idum);
+  idum = &(state_->idum);
   
-  k=(*idum)/IQ1;                 /* Start here when not initializing */
-  *idum=IA1*(*idum-k*IQ1)-k*IR1; /* Compute idum=(IA1*idum) % IM1 without */
-  if (*idum < 0) *idum += IM1;   /* overflows by Schrage's method */
-  k=state_->idum2/IQ2;
-  state_->idum2=IA2*(state_->idum2-k*IQ2)-k*IR2; /* Compute idum2=(IA2*idum) % IM2 likewise */
-  if (state_->idum2 < 0) state_->idum2 += IM2;
-  j=(int)(state_->iy/NDIV);              /* Will be in the range 0...RNG_NTAB-1 */
-  state_->iy=state_->iv[j]-state_->idum2;                /* Here idum is shuffled, idum and idum2 */
+  k = (*idum) / IQ1;                 /* Start here when not initializing */
+  *idum = IA1 * (*idum - k * IQ1) - k * IR1; /* Compute idum=(IA1*idum) % IM1 without */
+
+  if (*idum < 0) 
+    *idum += IM1;   /* overflows by Schrage's method */
+
+  k = state_-> idum2 / IQ2;
+  state_->idum2 = IA2 * (state_->idum2 - k * IQ2) - k * IR2; /* Compute idum2=(IA2*idum) % IM2 likewise */
+
+  if (state_->idum2 < 0) 
+   state_->idum2 += IM2;
+
+  j = (int)(state_->iy / NDIV);              /* Will be in the range 0...RNG_NTAB-1 */
+  state_->iy = state_->iv[j]-state_->idum2;                /* Here idum is shuffled, idum and idum2 */
   state_->iv[j] = *idum;                 /* are combined to generate output */
-  if (state_->iy < 1) state_->iy += IMM1;
-  if ((temp=AM*state_->iy) > RNMX) return RNMX; /* No endpoint values */
-  else return temp;
+
+  if (state_->iy < 1) 
+    state_->iy += IMM1;
+
+  if ((temp=AM*state_->iy) > RNMX) 
+    return RNMX; /* No endpoint values */
+  else 
+    return temp;
 }
 
 #undef IM1
@@ -102,12 +120,12 @@ double Random_Number_Generator::getUniform(){
 
 //! Draw a random number, inclusive of both min and max
 long Random_Number_Generator::getInteger(long min, long max){
-  return min + (long)floor((max + 1.0 - min)*getUniform());
+  return min + (long) floor((max + 1.0 - min) * getUniform());
 }
 
 //! Draw a number from a standard normal distribution.
 double Random_Number_Generator::getStandardNormal(){
-  return getGaussian(0.0,1.0);
+  return getGaussian(0.0, 1.0);
 }
 
 //! Draw a number from a normal distribution.
@@ -117,7 +135,7 @@ double Random_Number_Generator::getStandardNormal(){
  */
 double Random_Number_Generator::getGaussian(double mu, double sigma){
   const double epsilon = std::numeric_limits<double>::min();
-  const double two_pi = 2.0*3.14159265358979323846;
+  const double two_pi = 2.0 * 3.14159265358979323846;
 
   if (!state_->generate){ // just return the stored second number
     state_->generate = !state_->generate;
@@ -230,13 +248,13 @@ void Random_Number_Generator::computeUserCDF(){
   // Given PDF, calculate CDF
   if(userIsDiscrete_){ // Discrete, use bins
     for(int i = 1; i < userSize_; i++){
-      userCDF_[i] += userCDF_[i-1];
+      userCDF_[i] += userCDF_[i - 1];
     }
   } else { // Continuous, use trapezoidal rule
 
     userCDF_[0] = 0.0;
     for(int i = 1; i < userSize_; i++){
-      userCDF_[i] = 0.5*(userPDF_[i] + userPDF_[i-1]) + userCDF_[i-1];
+      userCDF_[i] = 0.5 * (userPDF_[i] + userPDF_[i - 1]) + userCDF_[i - 1];
     }
   }
 
@@ -258,7 +276,7 @@ double  Random_Number_Generator::getUserNumber(){
   assert(userVal_ != NULL && userCDF_ != NULL);
 
   int L = 0, R = userSize_ - 1;
-  int i = (R + L)/2;
+  int i = (R + L) / 2;
   double uni = getUniform();
 
 
@@ -268,7 +286,7 @@ double  Random_Number_Generator::getUserNumber(){
         R = i;
       else
         L = i + 1;
-      i = (R + L)/2;
+      i = (R + L) / 2;
     }
     return userVal_[i];
   } else {
@@ -278,7 +296,7 @@ double  Random_Number_Generator::getUserNumber(){
         R = i;
       else
         L = i;
-      i = (R + L)/2;
+      i = (R + L) / 2;
     }
 
     // If continuous, quadractically interpolate 
@@ -293,7 +311,7 @@ double  Random_Number_Generator::getUserNumber(){
     b = userPDF_[i+1];
 
     // discriminant of quadratic equation 
-    dis = (c1-c2)*((a*a)*(c1-c2) + 2*(uni - cdf)*(a-b)); 
+    dis = (c1 - c2) * ( (a * a) * (c1 - c2) + 2 * (uni - cdf) * (a - b)); 
     assert(dis > 0); // this should always be true
     sqroot = sqrt(dis);  
 
